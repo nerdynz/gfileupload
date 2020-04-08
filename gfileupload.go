@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	"cloud.google.com/go/storage"
@@ -69,4 +70,21 @@ func FromFile(file io.Reader, objectName string, bucketName string, isPublic boo
 	// }
 	url = "https://storage.googleapis.com/" + bucketName + "/" + objectName
 	return url, nil
+}
+
+// not currently specific to google TODO: add support for gs://paths
+func DownloadFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New("download failed for " + url)
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return b, err
 }
